@@ -1,16 +1,16 @@
-import {z } from 'zod';
+import { z } from "zod";
 
 export const CreateUserSchema = z.object({
-    username: z.string().min(1, { message: "Name is required" }),
-    password: z.string().min(6, { message: "Password is required" }),
-    email: z.string().email({ message: "Email is required" }),
-});
+    username: z.string().min(3).max(20),
+    password: z.string(),
+    name: z.string()
+})
 
-export const LoginUserSchema = z.object({
-    username: z.string().min(1, { message: "Name is required" }),
-    password: z.string().min(6, { message: "Password is required" }),
-});
+export const SigninSchema = z.object({
+    username: z.string().min(3).max(20),
+    password: z.string(),
+})
 
 export const CreateRoomSchema = z.object({
-    name: z.string().min(1, { message: "Name is required" }),
-});
+    name: z.string().min(3).max(20),
+})
