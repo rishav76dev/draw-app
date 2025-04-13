@@ -26,9 +26,9 @@ function checkUser(token: string): string | null {
 
     return decoded.userId;
   } catch(e) {
+    console.error("JWT error:", e); 
     return null;
   }
-  return null;
 }
 
 wss.on('connection', function connection(ws, request) {
