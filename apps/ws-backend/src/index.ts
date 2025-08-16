@@ -1,7 +1,7 @@
 import { WebSocket, WebSocketServer } from 'ws';
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { JWT_SECRET } from '@repo/backend-common/config';
-import { prismaClient } from "@repo/db/client";
+import { prisma } from '@repo/db/client';
 
 const wss = new WebSocketServer({ port: 8080 });
 
@@ -26,7 +26,7 @@ function checkUser(token: string): string | null {
 
     return decoded.userId;
   } catch(e) {
-    console.error("JWT error:", e); 
+    console.error("JWT error:", e);
     return null;
   }
 }
@@ -71,7 +71,7 @@ wss.on('connection', function connection(ws, request) {
       const roomId = parsedData.roomId;
       const message = parsedData.message;
 
-      await prismaClient.chat.create({
+      await prisma.chat.create({
         data: {
           roomId,
           message,

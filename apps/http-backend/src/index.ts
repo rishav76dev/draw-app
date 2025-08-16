@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import { JWT_SECRET } from '@repo/backend-common/config';
 import { middleware } from "./middleware";
 import { CreateUserSchema, SigninSchema, CreateRoomSchema } from "@repo/common/types";
-import { prismaClient } from "@repo/db/client";
+import { prisma } from "@repo/db/client";
 import cors from "cors"
 
 const app = express();
@@ -21,7 +21,7 @@ app.post("/signup", async (req, res) => {
         return;
     }
     try {
-        const user = await prismaClient.user.create({
+        const user = await prisma.user.create({
             data: {
                 email: parsedData.data?.username,
                 // TODO: Hash the pw
@@ -49,7 +49,7 @@ app.post("/signin", async (req, res) => {
     }
 
     // TODO: Compare the hashed pws here
-    const user = await prismaClient.user.findFirst({
+    const user = await prisma.user.findFirst({
         where: {
             email: parsedData.data.username,
             password: parsedData.data.password
@@ -84,7 +84,7 @@ app.post("/room", middleware, async (req, res) => {
     const userId = req.userId;
 
     try {
-        const room = await prismaClient.room.create({
+        const room = await prisma.room.create({
             data: {
                 slug: parsedData.data.name,
                 adminId: userId
@@ -103,7 +103,7 @@ app.post("/room", middleware, async (req, res) => {
 
 app.get("/chats/:roomId", async (req, res) => {
     const roomId = Number(req.params.roomId);
-    const messages = await prismaClient.chat.findMany({
+    const messages = await prisma.chat.findMany({
         where: {
             roomId: roomId
         },
@@ -121,7 +121,7 @@ app.get("/chats/:roomId", async (req, res) => {
 
 app.get("/chats/:slug", async (req, res) => {
     const slug = req.params.slug;
-    const room = await prismaClient.room.findMany({
+    const room = await prisma.room.findMany({
         where: {
             slug
         }
