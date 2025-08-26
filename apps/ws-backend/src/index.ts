@@ -1,16 +1,29 @@
-import { WebSocket, WebSocketServer } from 'ws';
+import { WebSocket, WebSocketServer } from "ws";
 import jwt, { JwtPayload } from "jsonwebtoken";
-import { JWT_SECRET } from '@repo/backend-common/config';
-import { prisma } from '@repo/db/client';
+import { JWT_SECRET } from "@repo/backend-common/config";
+import { prisma } from "@repo/db/client";
 
 const wss = new WebSocketServer({ port: 8080 });
 
 interface User {
-  ws: WebSocket,
-  rooms: string[],
-  userId: string
+  ws: WebSocket;
+  rooms: string[];
+  userId: string;
 }
 const users: User[] = [];
+
+// [
+//   {
+//     ws: ws,
+//     rooms: [],
+//     userId: 1,
+//   },
+//   {
+//     ws: ws,
+//     rooms: [],
+//     userId: 2,
+//   },
+// ];
 
 function checkUser(token: string): string | null {
   try {
@@ -25,46 +38,46 @@ function checkUser(token: string): string | null {
     }
 
     return decoded.userId;
-  } catch(e) {
+  } catch (e) {
     console.error("JWT error:", e);
     return null;
   }
 }
 
-wss.on('connection', function connection(ws, request) {
+wss.on("connection", function connection(ws, request) {
   const url = request.url;
   if (!url) {
     return;
   }
-  const queryParams = new URLSearchParams(url.split('?')[1]);
-  const token = queryParams.get('token') || "";
+  const queryParams = new URLSearchParams(url.split("?")[1]);
+  const token = queryParams.get("token") || "";
   const userId = checkUser(token);
 
   if (userId == null) {
-    ws.close()
+    ws.close();
     return null;
   }
 
   users.push({
     userId,
     rooms: [],
-    ws
-  })
+    ws,
+  });
 
-  ws.on('message', async function message(data) {
+  ws.on("message", async function message(data) {
     const parsedData = JSON.parse(data as unknown as string); // {type: "join-room", roomId: 1}
 
     if (parsedData.type === "join_room") {
-      const user = users.find(x => x.ws === ws);
+      const user = users.find((x) => x.ws === ws);
       user?.rooms.push(parsedData.roomId);
     }
 
     if (parsedData.type === "leave_room") {
-      const user = users.find(x => x.ws === ws);
+      const user = users.find((x) => x.ws === ws);
       if (!user) {
         return;
       }
-      user.rooms = user?.rooms.filter(x => x === parsedData.room);
+      user.rooms = user?.rooms.filter((x) => x !== parsedData.room);
     }
 
     if (parsedData.type === "chat") {
@@ -75,22 +88,21 @@ wss.on('connection', function connection(ws, request) {
         data: {
           roomId,
           message,
-          userId
-        }
+          userId,
+        },
       });
 
-      users.forEach(user => {
+      users.forEach((user) => {
         if (user.rooms.includes(roomId)) {
-          user.ws.send(JSON.stringify({
-            type: "chat",
-            message: message,
-            roomId
-          }))
+          user.ws.send(
+            JSON.stringify({
+              type: "chat",
+              message: message,
+              roomId,
+            })
+          );
         }
-      })
+      });
     }
-
   });
-
 });
-
